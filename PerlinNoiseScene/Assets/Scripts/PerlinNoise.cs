@@ -58,10 +58,8 @@ public class PerlinNoise {
         //DemoPlantGrowth();
     }
 
-    public float[][] GenerateHeightMap(int width, int height)
+    public float[][] GenerateHeightMap(int width, int height, int octaveCount)
     {
-        int octaveCount = 8;
-
         Color32 gradientStart = new Color32(255, 0, 0, 255);
         Color32 gradientEnd = new Color32(255, 0, 255, 255);
 
@@ -95,7 +93,7 @@ public class PerlinNoise {
         return x0 * (1 - alpha) + alpha * x1;
     }
 
-    public static Color32 Interpolate(Color col0, Color col1, float alpha)
+    public static Color32 Interpolate(Color32 col0, Color32 col1, float alpha)
     {
         float beta = 1 - alpha;
         return new Color32(
@@ -105,7 +103,7 @@ public class PerlinNoise {
             255);
     }
 
-    public static Color GetColor(Color gradientStart, Color gradientEnd, float t)
+    public static Color32 GetColor(Color32 gradientStart, Color32 gradientEnd, float t)
     {
         float u = 1 - t;
 
@@ -156,6 +154,7 @@ public class PerlinNoise {
         float[][] smoothNoise = GetEmptyArray<float>(width, height);
 
         int samplePeriod = 1 << octave; // calculates 2 ^ k
+        samplePeriod *= 4;
         float sampleFrequency = 1.0f / samplePeriod;
 
         for (int i = 0; i < width; i++)
@@ -195,7 +194,7 @@ public class PerlinNoise {
 
         float[][][] smoothNoise = new float[octaveCount][][]; //an array of 2D arrays containing
 
-        float persistance = 0.7f;
+        float persistance = 0.5f;
 
         //generate smooth noise
         for (int i = 0; i < octaveCount; i++)
@@ -205,7 +204,7 @@ public class PerlinNoise {
 
         float[][] perlinNoise = GetEmptyArray<float>(width, height); //an array of floats initialised to 0
 
-        float amplitude = 1.0f;
+        float amplitude = persistance;
         float totalAmplitude = 0.0f;
 
         //blend noise together

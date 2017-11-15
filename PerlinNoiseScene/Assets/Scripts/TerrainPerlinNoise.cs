@@ -13,23 +13,24 @@ public class TerrainPerlinNoise : MonoBehaviour
     {
         Terrain obj = FindObjectOfType<Terrain>();
 
+        myPerlinNoiseGenerator = new PerlinNoise();
+
         if (obj != null)
         {
             GenerateHeights(obj, Tiling);
         }
 
-        myPerlinNoiseGenerator = new PerlinNoise();
     }
 
     public void GenerateHeights(Terrain terrain, float tileSize)
     {
         float[,] heights = new float[terrain.terrainData.heightmapWidth, terrain.terrainData.heightmapHeight];
 
-        var perlinHeights = myPerlinNoiseGenerator.GenerateHeightMap(terrain.terrainData.heightmapWidth, terrain.terrainData.heightmapHeight);
+        var perlinHeights = myPerlinNoiseGenerator.GenerateHeightMap(terrain.terrainData.heightmapWidth, terrain.terrainData.heightmapHeight, 6);
 
-        for (int i = 0; i < terrain.terrainData.heightmapWidth; i++)
+        for (int i = 0; i < terrain.terrainData.size.x; i++)
         {
-            for (int k = 0; k < terrain.terrainData.heightmapHeight; k++)
+            for (int k = 0; k < terrain.terrainData.size.z; k++)
             {
                 heights[i, k] = perlinHeights[i][k];
             }
