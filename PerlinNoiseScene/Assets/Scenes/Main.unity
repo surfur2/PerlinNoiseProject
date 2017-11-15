@@ -370,3 +370,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Tiling: 10
+  octaves: 7
+  maximumHeight: 90
+  heightOfFields: 8
+  heightForMountains: 90
+  mountainsCenter: 512
+  mountainRadius: 250
