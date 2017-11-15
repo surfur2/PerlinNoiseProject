@@ -26,16 +26,10 @@ namespace CustomPerlinNoise
     }
 
     // Base code taken from http://devmag.org.za/2009/04/25/perlin-noise/
-    // Modifications amde to the noise generation functions and the inputs to the noise generating functions.
+    // Modifications made to the noise generation functions and the inputs to the noise generating functions.
     public class PerlinNoise
     {
-
-        #region Feilds
         static System.Random random = new System.Random();
-        #endregion
-
-
-        #region Demo
        
         public float[][] GenerateHeightMap(TerrainAreaInfo fieldTerrainInfo)
         {
@@ -48,7 +42,23 @@ namespace CustomPerlinNoise
 
             return perlinNoise;
         }
-        #endregion
+
+        public Texture2D GenerateBlendTexture(float[][] perlinNoise)
+        {
+            Color32[][] image1 = LoadImage("rockTexture");
+            Color32[][] image2 = LoadImage("grassTexture");
+
+            int width = image1.Length;
+            int height = image1[0].Length;
+
+            perlinNoise = AdjustLevels(perlinNoise, 0.2f, 0.8f);
+
+            Color32[][] perlinImage = BlendImages(image1, image2, perlinNoise);
+
+            var newTexture = SaveImage(perlinImage, "perlin_noise_blended.png");
+
+            return newTexture;
+        }
 
         #region Reusable Functions
 
@@ -241,7 +251,7 @@ namespace CustomPerlinNoise
             return image;
         }
 
-        public static void SaveImage(Color32[][] image, string fileName)
+        public Texture2D SaveImage(Color32[][] image, string fileName)
         {
             int width = image.Length;
             int height = image[0].Length;
@@ -261,6 +271,8 @@ namespace CustomPerlinNoise
             var binary = new BinaryWriter(file);
             binary.Write(bytes);
             file.Close();
+
+            return texture;
         }
 
         public static float[][] AdjustLevels(float[][] image, float low, float high)
@@ -292,6 +304,44 @@ namespace CustomPerlinNoise
             }
 
             return newImage;
+        }
+
+        public static Color32[][] BlendImages(Color32[][] image1, Color32[][] image2, float[][] perlinNoise)
+        {
+            int width = perlinNoise.Length - 1;
+            int height = perlinNoise[0].Length - 1;
+
+            Color32[][] image = GetEmptyArray<Color32>(width, height); //an array of colours for the new image
+
+            for (int i = 0; i < width; i++)
+            {
+                for (int j = 0; j < height; j++)
+                {
+                    image[i][j] = Interpolate(image1[i/2][j/2], image2[i/2][j/2], perlinNoise[i][j]);
+                }
+            }
+
+            return image;
+        }
+
+        public static Color32[][] LoadImage(string fileName)
+        {
+            Texture2D texture = Resources.Load(fileName) as Texture2D;
+
+            int width = texture.width;
+            int height = texture.height;
+
+            Color32[][] image = GetEmptyArray<Color32>(width, height);
+
+            for (int i = 0; i < width; i++)
+            {
+                for (int j = 0; j < height; j++)
+                {
+                    image[i][j] = (Color32)texture.GetPixel(i, j);
+                }
+            }
+
+            return image;
         }
         #endregion
     }
