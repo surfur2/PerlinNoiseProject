@@ -428,7 +428,9 @@ MonoBehaviour:
   grassBlend: 0.08
   mountainBlend: 0.17
   snowBlend: 0.7
-  treeIndicies: 0000000001000000
+  treeIndicies: 00000000010000000600000007000000
   threshholdForTree: 0.7
-  shrubIndicies: 0300000004000000
-  threshholdForShrub: 0.8
+  shrubIndicies: 02000000030000000800000009000000
+  threshholdForShrub: 0.2
+  rockIndicies: 04000000050000000a0000000b000000
+  threshholdForRock: 0.7

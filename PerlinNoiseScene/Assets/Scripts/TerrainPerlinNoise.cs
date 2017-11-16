@@ -21,23 +21,27 @@ public class TerrainPerlinNoise : MonoBehaviour
     public float threshholdForTree;
     public int[] shrubIndicies;
     public float threshholdForShrub;
+    public int[] rockIndicies;
+    public float threshholdForRock;
     private PerlinNoise myPerlinNoiseGenerator;
+
+    Terrain terrain;
 
     void Start()
     {
-        Terrain obj = FindObjectOfType<Terrain>();
+        terrain = FindObjectOfType<Terrain>();
 
         myPerlinNoiseGenerator = new PerlinNoise();
 
-        if (obj != null)
+        if (terrain != null)
         {
-            GenerateHeights(obj);
-            GenerateFoliage(obj);
+            GenerateHeights();
+            GenerateFoliage();
         }
 
     }
 
-    public void GenerateHeights(Terrain terrain)
+    public void GenerateHeights()
     {
         float[][] heights = PerlinNoise.GetEmptyArray<float>(terrain.terrainData.heightmapWidth, terrain.terrainData.heightmapHeight);
 
@@ -85,7 +89,7 @@ public class TerrainPerlinNoise : MonoBehaviour
         terrain.terrainData.SetHeights(0, 0, unityHeightMap);
     }
 
-    public void GenerateFoliage(Terrain terrain)
+    public void GenerateFoliage()
     {
         var densityMapReductionFactor = 16;
         var densityMapWidth = terrain.terrainData.heightmapHeight / densityMapReductionFactor;
@@ -94,55 +98,75 @@ public class TerrainPerlinNoise : MonoBehaviour
 
         var perlinFoliageDensity = myPerlinNoiseGenerator.GenerateHeightMap(fieldsInfo);
 
-        // Convert from float[][] to float[,] which Unity needs for height map
         List<TreeInstance> treeData = new List<TreeInstance>();
         for (int i = 0; i < densityMapWidth; i++)
         {
             for (int k = 0; k < densityMapWidth; k++)
             {
                 var currentDensity = perlinFoliageDensity[i][k];
-                if (currentDensity > threshholdForTree)
-                {
-                    var randomPositionOffset = Random.Range(-4, 4);
-                    var terrainSpaceX = i * densityMapReductionFactor + randomPositionOffset;
-                    var terrainSpaceZ = k * densityMapReductionFactor + randomPositionOffset;
 
-                    TreeInstance newTree = new TreeInstance();
-                    newTree.prototypeIndex = treeIndicies[Random.Range(0, treeIndicies.Length)];
-                    newTree.color = new Color(1, 1, 1);
-                    newTree.lightmapColor = new Color(1, 1, 1);
-                    newTree.heightScale = 1;
-                    newTree.widthScale = 1;
-                    newTree.position = new Vector3(((float)terrainSpaceX / (float)terrain.terrainData.heightmapHeight), 
-                        ((float)terrain.terrainData.GetHeight(terrainSpaceX, terrainSpaceZ) / (float)terrain.terrainData.size.y), 
-                        ((float)terrainSpaceZ / (float)terrain.terrainData.heightmapHeight)
-                    );
-                
-                    treeData.Add(newTree);
+                var distanceToMountains = ((mountainsCenter - i) * (mountainsCenter - i) + (mountainsCenter - k) * (mountainsCenter - k));
+
+                // Field area
+                if (distanceToMountains > mountainRadius * mountainRadius)
+                { 
+                    // Spawn a tree
+                    if (currentDensity > threshholdForTree)
+                    {
+                        var randomPositionOffset = Random.Range(-4, 4);
+
+                        var terrainSpaceX = i * densityMapReductionFactor + randomPositionOffset;
+                        var terrainSpaceZ = k * densityMapReductionFactor + randomPositionOffset;
+
+                        TreeInstance tree = GetDefaultTerrainEntity(terrainSpaceX, terrainSpaceZ, treeIndicies);
+                        treeData.Add(tree);
+                    }
+
+                    // Spawn foliage
+                    if (currentDensity > threshholdForShrub)
+                    {
+                        var randomPositionOffset = Random.Range(-4, 4);
+                        var terrainSpaceX = i * densityMapReductionFactor + randomPositionOffset;
+                        var terrainSpaceZ = k * densityMapReductionFactor + randomPositionOffset;
+
+                        TreeInstance shrubData = GetDefaultTerrainEntity(terrainSpaceX, terrainSpaceZ, shrubIndicies);
+                        treeData.Add(shrubData);
+                    }
                 }
-
-                if (currentDensity < threshholdForShrub)
+                // Mountain area
+                else
                 {
-                    var randomPositionOffset = Random.Range(-4, 4);
-                    var terrainSpaceX = i * densityMapReductionFactor + randomPositionOffset;
-                    var terrainSpaceZ = k * densityMapReductionFactor + randomPositionOffset;
+                    // Spawn rocks
+                    if (currentDensity > threshholdForRock)
+                    {
+                        var randomPositionOffset = Random.Range(-4, 4);
+                        var terrainSpaceX = i * densityMapReductionFactor + randomPositionOffset;
+                        var terrainSpaceZ = k * densityMapReductionFactor + randomPositionOffset;
 
-                    TreeInstance shrubData = new TreeInstance();
-                    shrubData.prototypeIndex = shrubIndicies[Random.Range(0, shrubIndicies.Length)];
-                    shrubData.color = new Color(1, 1, 1);
-                    shrubData.lightmapColor = new Color(1, 1, 1);
-                    shrubData.heightScale = 1;
-                    shrubData.widthScale = 1;
-                    shrubData.position = new Vector3(((float)terrainSpaceX / (float)terrain.terrainData.heightmapHeight),
-                        ((float)terrain.terrainData.GetHeight(terrainSpaceX, terrainSpaceZ) / (float)terrain.terrainData.size.y),
-                        ((float)terrainSpaceZ / (float)terrain.terrainData.heightmapHeight)
-                    );
-
-                    treeData.Add(shrubData);
+                        TreeInstance rockData = GetDefaultTerrainEntity(terrainSpaceX, terrainSpaceZ, rockIndicies);
+                        treeData.Add(rockData);
+                    }
                 }
             }
         }
 
         terrain.terrainData.treeInstances = treeData.ToArray();
+    }
+
+
+    private TreeInstance GetDefaultTerrainEntity(float terrainSpaceX, float terrainSpaceZ, int[] indexArray)
+    {
+        TreeInstance terrainData = new TreeInstance();
+        terrainData.prototypeIndex = indexArray[Random.Range(0, indexArray.Length)];
+        terrainData.color = new Color(1, 1, 1);
+        terrainData.lightmapColor = new Color(1, 1, 1);
+        terrainData.heightScale = 1;
+        terrainData.widthScale = 1;
+        terrainData.position = new Vector3((terrainSpaceX / (float)terrain.terrainData.heightmapHeight),
+            (terrain.terrainData.GetHeight((int)terrainSpaceX, (int)terrainSpaceZ) / terrain.terrainData.size.y),
+            (terrainSpaceZ / (float)terrain.terrainData.heightmapHeight)
+        );
+
+        return terrainData;
     }
 }
