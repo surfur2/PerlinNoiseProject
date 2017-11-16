@@ -157,9 +157,10 @@ namespace CustomPerlinNoise
             int height = baseNoise[0].Length;
 
             float[][] smoothNoise = GetEmptyArray<float>(width, height);
+            int lucanarity = 6;
 
             int samplePeriod = 1 << octave; // calculates 2 ^ k
-            samplePeriod *= 4;
+            samplePeriod *= lucanarity;
             float sampleFrequency = 1.0f / samplePeriod;
 
             for (int i = 0; i < width; i++)
