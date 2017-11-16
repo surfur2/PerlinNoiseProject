@@ -38,12 +38,12 @@ namespace CustomPerlinNoise
 
             float[][] perlinNoise = GeneratePerlinNoise(fieldTerrainInfo);
             Color32[][] perlinImage = MapGradient(gradientStart, gradientEnd, perlinNoise);
-            SaveImage(perlinImage, "perlin_noise.png");
+            SaveImage(perlinImage, "perlin_noise", 1);
 
             return perlinNoise;
         }
 
-        public Texture2D GenerateBlendTexture(float[][] perlinNoise, float lowerClamp, float highClamp, float highestClamp)
+        public void GenerateBlendTexture(float[][] perlinNoise, float lowerClamp, float highClamp, float highestClamp, int partitions)
         {
             Color32[][] image1 = LoadImage("snowTexture");
             Color32[][] image2 = LoadImage("rockTexture");
@@ -61,9 +61,7 @@ namespace CustomPerlinNoise
             blendImageNoise = AdjustLevels(perlinNoise, highClamp, highestClamp, desiredTextureWidth, desiredTextureHeight);
             Color32[][] perlinImageBlendLevelTwo = BlendImages(image1, perlinImageBlendLevelOne, blendImageNoise, desiredTextureWidth, desiredTextureHeight);
 
-            var newTexture = SaveImage(perlinImageBlendLevelTwo, "perlin_noise_blended.png");
-
-            return newTexture;
+            SaveImage(perlinImageBlendLevelTwo, "perlin_noise_texture_blended", partitions);
         }
 
         #region Reusable Functions
@@ -267,28 +265,34 @@ namespace CustomPerlinNoise
             return image;
         }
 
-        public Texture2D SaveImage(Color32[][] image, string fileName)
+        public void SaveImage(Color32[][] image, string fileName, int partitions)
         {
-            int width = image.Length;
-            int height = image[0].Length;
+            int numberImagesOneSide = Mathf.Max(1, partitions / 2);
+            int pixelsPerParition = image.Length / numberImagesOneSide;
 
-            Texture2D texture = new Texture2D(width, height);
 
-            for (int i = 0; i < width; i++)
+            for (int l = 0; l < numberImagesOneSide; l++)
             {
-                for (int j = 0; j < height; j++)
+                for (int m = 0; m < numberImagesOneSide; m++)
                 {
-                    texture.SetPixel(i, j, image[i][j]);
+                    Texture2D texture = new Texture2D(pixelsPerParition, pixelsPerParition);
+
+                    for (int i = (l * pixelsPerParition); i < ((l + 1) * pixelsPerParition); i++)
+                    {
+                        for (int j = (m * pixelsPerParition); j < ((m + 1) * pixelsPerParition); j++)
+                        {
+                            texture.SetPixel(i, j, image[i][j]);
+                        }
+                    }
+
+                    var bytes = texture.EncodeToPNG();
+                    var file = File.Open(Application.dataPath + "/" + fileName + (l + 2*m) + ".png", FileMode.OpenOrCreate);
+                    var binary = new BinaryWriter(file);
+                    binary.Write(bytes);
+                    file.Close();
                 }
+
             }
-
-            var bytes = texture.EncodeToPNG();
-            var file = File.Open(Application.dataPath + "/" + fileName, FileMode.OpenOrCreate);
-            var binary = new BinaryWriter(file);
-            binary.Write(bytes);
-            file.Close();
-
-            return texture;
         }
 
         public static float[][] AdjustLevels(float[][] image, float low, float high, int textureWidth, int textureHeight)
