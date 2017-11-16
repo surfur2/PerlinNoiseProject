@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657874, g: 0.49641258, b: 0.574817, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
@@ -108,6 +108,48 @@ NavMeshSettings:
     tileSize: 256
     accuratePlacement: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1001 &53414325
+Prefab:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 2}
+      propertyPath: m_LocalPosition.x
+      value: 165.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 2}
+      propertyPath: m_LocalPosition.y
+      value: 275.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 2}
+      propertyPath: m_LocalPosition.z
+      value: 587.01
+      objectReference: {fileID: 0}
+    - target: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 2}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 2}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 2}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 2}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 2}
+      propertyPath: m_RootOrder
+      value: 3
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_ParentPrefab: {fileID: 100100000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 2}
+  m_IsPrefabParent: 0
 --- !u!1 &619723653
 GameObject:
   m_ObjectHideFlags: 0
@@ -184,9 +226,9 @@ GameObject:
   - component: {fileID: 1103554548}
   - component: {fileID: 1103554547}
   - component: {fileID: 1103554546}
-  - component: {fileID: 1103554545}
   - component: {fileID: 1103554551}
   - component: {fileID: 1103554550}
+  - component: {fileID: 1103554552}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -194,13 +236,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!81 &1103554545
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1103554544}
-  m_Enabled: 1
 --- !u!124 &1103554546
 Behaviour:
   m_ObjectHideFlags: 0
@@ -258,7 +293,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1103554544}
   m_LocalRotation: {x: 0.3420201, y: 0, z: 0, w: 0.9396927}
-  m_LocalPosition: {x: 171.9, y: 87.9, z: 15.6}
+  m_LocalPosition: {x: 171.9, y: 72.18, z: 34.33}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -286,6 +321,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a3db1fa5d0419c54bbaed6e0d0857dd9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!54 &1103554552
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1103554544}
+  serializedVersion: 2
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1 &1747431790
 GameObject:
   m_ObjectHideFlags: 0
@@ -310,7 +360,7 @@ TerrainCollider:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1747431790}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: 0b496bef5c334a24fb81efae5faa84a5, type: 2}
   m_Enabled: 1
   m_TerrainData: {fileID: 15600000, guid: 5c4fb492cf1e4044eb16c081ab329978, type: 2}
   m_EnableTreeColliders: 1
@@ -369,7 +419,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b6f746cf26d1b974794b3a3bdc8e4f46, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Tiling: 10
   octaves: 7
   maximumHeight: 90
   heightOfFields: 15
@@ -379,3 +428,7 @@ MonoBehaviour:
   grassBlend: 0.08
   mountainBlend: 0.17
   snowBlend: 0.7
+  treeIndicies: 0000000001000000
+  threshholdForTree: 0.7
+  shrubIndicies: 0300000004000000
+  threshholdForShrub: 0.8
