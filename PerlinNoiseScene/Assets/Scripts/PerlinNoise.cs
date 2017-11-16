@@ -43,19 +43,25 @@ namespace CustomPerlinNoise
             return perlinNoise;
         }
 
-        public Texture2D GenerateBlendTexture(float[][] perlinNoise)
+        public Texture2D GenerateBlendTexture(float[][] perlinNoise, float lowerClamp, float highClamp, float highestClamp)
         {
-            Color32[][] image1 = LoadImage("rockTexture");
-            Color32[][] image2 = LoadImage("grassTexture");
+            Color32[][] image1 = LoadImage("snowTexture");
+            Color32[][] image2 = LoadImage("rockTexture");
+            Color32[][] image3 = LoadImage("grassTexture");
 
-            int width = image1.Length;
-            int height = image1[0].Length;
+            int textureQuality = 4;
+            int desiredTextureWidth = (perlinNoise.Length - 1) * textureQuality;
+            int desiredTextureHeight = (perlinNoise[0].Length - 1) * textureQuality;
 
-            perlinNoise = AdjustLevels(perlinNoise, 0.2f, 0.8f);
+            // Blend the first two images
+            var blendImageNoise = AdjustLevels(perlinNoise, lowerClamp, highClamp, desiredTextureWidth, desiredTextureHeight);
+            Color32[][] perlinImageBlendLevelOne = BlendImages(image2, image3, blendImageNoise, desiredTextureWidth, desiredTextureHeight);
 
-            Color32[][] perlinImage = BlendImages(image1, image2, perlinNoise);
+            // Blend the resulting image and the last image
+            blendImageNoise = AdjustLevels(perlinNoise, highClamp, highestClamp, desiredTextureWidth, desiredTextureHeight);
+            Color32[][] perlinImageBlendLevelTwo = BlendImages(image1, perlinImageBlendLevelOne, blendImageNoise, desiredTextureWidth, desiredTextureHeight);
 
-            var newTexture = SaveImage(perlinImage, "perlin_noise_blended.png");
+            var newTexture = SaveImage(perlinImageBlendLevelTwo, "perlin_noise_blended.png");
 
             return newTexture;
         }
@@ -83,6 +89,16 @@ namespace CustomPerlinNoise
         }
 
         public static Color32 Interpolate(Color32 col0, Color32 col1, float alpha)
+        {
+            float beta = 1 - alpha;
+            return new Color32(
+                (byte)(col0.r * alpha + col1.r * beta),
+                (byte)(col0.g * alpha + col1.g * beta),
+                (byte)(col0.b * alpha + col1.b * beta),
+                255);
+        }
+
+        public static Color32 Interpolate(Color32 col0, Color32 col1, Color32 col2, float alpha)
         {
             float beta = 1 - alpha;
             return new Color32(
@@ -267,7 +283,7 @@ namespace CustomPerlinNoise
             }
 
             var bytes = texture.EncodeToPNG();
-            var file = File.Open(Application.dataPath + "/" + fileName, FileMode.Create);
+            var file = File.Open(Application.dataPath + "/" + fileName, FileMode.OpenOrCreate);
             var binary = new BinaryWriter(file);
             binary.Write(bytes);
             file.Close();
@@ -275,18 +291,17 @@ namespace CustomPerlinNoise
             return texture;
         }
 
-        public static float[][] AdjustLevels(float[][] image, float low, float high)
+        public static float[][] AdjustLevels(float[][] image, float low, float high, int textureWidth, int textureHeight)
         {
-            int width = image.Length;
-            int height = image[0].Length;
+            float[][] newImage = GetEmptyArray<float>(textureWidth, textureHeight);
 
-            float[][] newImage = GetEmptyArray<float>(width, height);
+            int imageInterpolationFactorImage = Mathf.Max(1, textureWidth / (image.Length - 1));
 
-            for (int i = 0; i < width; i++)
+            for (int i = 0; i < textureWidth; i++)
             {
-                for (int j = 0; j < height; j++)
+                for (int j = 0; j < textureHeight; j++)
                 {
-                    float col = image[i][j];
+                    float col = image[i/ imageInterpolationFactorImage][j / imageInterpolationFactorImage];
 
                     if (col <= low)
                     {
@@ -306,18 +321,17 @@ namespace CustomPerlinNoise
             return newImage;
         }
 
-        public static Color32[][] BlendImages(Color32[][] image1, Color32[][] image2, float[][] perlinNoise)
+        public static Color32[][] BlendImages(Color32[][] image1, Color32[][] image2, float[][] perlinNoise, int textureWidth, int textureHeight)
         {
-            int width = perlinNoise.Length - 1;
-            int height = perlinNoise[0].Length - 1;
+            int imageInterpolationFactorImageOne = Mathf.Max(1, textureWidth / image1.Length);
+            int imageInterpolationFactorImageTwo = Mathf.Max(1, textureWidth / image2.Length);
+            Color32[][] image = GetEmptyArray<Color32>(textureWidth, textureHeight); //an array of colours for the new image
 
-            Color32[][] image = GetEmptyArray<Color32>(width, height); //an array of colours for the new image
-
-            for (int i = 0; i < width; i++)
+            for (int i = 0; i < textureWidth; i++)
             {
-                for (int j = 0; j < height; j++)
+                for (int j = 0; j < textureHeight; j++)
                 {
-                    image[i][j] = Interpolate(image1[i/2][j/2], image2[i/2][j/2], perlinNoise[i][j]);
+                    image[i][j] = Interpolate(image1[i/ imageInterpolationFactorImageOne][j/ imageInterpolationFactorImageOne], image2[i/ imageInterpolationFactorImageTwo][j/ imageInterpolationFactorImageTwo], perlinNoise[i][j]);
                 }
             }
 

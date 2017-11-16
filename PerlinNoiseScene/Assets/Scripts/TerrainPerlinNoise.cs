@@ -13,6 +13,9 @@ public class TerrainPerlinNoise : MonoBehaviour
     public float heightForMountains;
     public int mountainsCenter;
     public float mountainRadius;
+    public float grassBlend;
+    public float mountainBlend;
+    public float snowBlend;
 
     private PerlinNoise myPerlinNoiseGenerator;
 
@@ -61,7 +64,7 @@ public class TerrainPerlinNoise : MonoBehaviour
             }
         }
 
-        myPerlinNoiseGenerator.GenerateBlendTexture(heights);
+        var newTexture = myPerlinNoiseGenerator.GenerateBlendTexture(heights, grassBlend, mountainBlend, snowBlend);
 
         float[,] unityHeightMap = new float[terrain.terrainData.heightmapWidth, terrain.terrainData.heightmapHeight];
 
@@ -73,6 +76,7 @@ public class TerrainPerlinNoise : MonoBehaviour
                 unityHeightMap[i, k] = heights[i][k];
             }
         }
+
         terrain.terrainData.SetHeights(0, 0, unityHeightMap);
     }
 }
