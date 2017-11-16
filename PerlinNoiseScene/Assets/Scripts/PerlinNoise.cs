@@ -49,7 +49,7 @@ namespace CustomPerlinNoise
             Color32[][] image2 = LoadImage("rockTexture");
             Color32[][] image3 = LoadImage("grassTexture");
 
-            int textureQuality = 4;
+            int textureQuality = 16;
             int desiredTextureWidth = (perlinNoise.Length - 1) * textureQuality;
             int desiredTextureHeight = (perlinNoise[0].Length - 1) * textureQuality;
 
