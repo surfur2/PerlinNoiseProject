@@ -27,28 +27,50 @@ namespace CustomPerlinNoise
 
     // Base code taken from http://devmag.org.za/2009/04/25/perlin-noise/
     // Modifications made to the noise generation functions and the inputs to the noise generating functions.
+    /// <summary>
+    /// Class that contains "perlin noise generation" which is actually white noise from random based through a modified FBM.
+    /// Class that contains methods for blending images. Modified to create unity textures instead.
+    /// </summary>
     public class PerlinNoise
     {
         static System.Random random = new System.Random();
        
+        /// <summary>
+        /// Entrypoint for generating a heightmap
+        /// </summary>
+        /// <param name="fieldTerrainInfo"></param>
+        /// <returns></returns>
         public float[][] GenerateHeightMap(TerrainAreaInfo fieldTerrainInfo)
         {
+            // Colors used for the output of perlin noise. Mostly used for debugging but it is the pink picture.
             Color32 gradientStart = new Color32(255, 0, 0, 255);
             Color32 gradientEnd = new Color32(255, 0, 255, 255);
 
             float[][] perlinNoise = GeneratePerlinNoise(fieldTerrainInfo);
+
+            // Save a heatmap for the generated perlin noise
             Color32[][] perlinImage = MapGradient(gradientStart, gradientEnd, perlinNoise);
             SaveImage(perlinImage, "perlin_noise.png");
 
             return perlinNoise;
         }
 
+        /// <summary>
+        /// Entry point for generating a texture from a heightmap.
+        /// </summary>
+        /// <param name="perlinNoise"></param>
+        /// <param name="lowerClamp"></param>
+        /// <param name="highClamp"></param>
+        /// <param name="highestClamp"></param>
+        /// <returns></returns>
         public Texture2D GenerateBlendTexture(float[][] perlinNoise, float lowerClamp, float highClamp, float highestClamp)
         {
             Color32[][] image1 = LoadImage("snowTexture");
             Color32[][] image2 = LoadImage("rockTexture");
             Color32[][] image3 = LoadImage("grassTexture");
 
+            // This is a base 2 multiplier for the output texture based on the input noise.
+            // Currently the input noise is 1024x1024 so the output texture would be 4096X4096.
             int textureQuality = 4;
             int desiredTextureWidth = (perlinNoise.Length - 1) * textureQuality;
             int desiredTextureHeight = (perlinNoise[0].Length - 1) * textureQuality;
@@ -68,6 +90,12 @@ namespace CustomPerlinNoise
 
         #region Reusable Functions
 
+        /// <summary>
+        /// Noise generating function which uses Random.Range for creating a 2D array of noise between 0.0-1.0
+        /// </summary>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <returns></returns>
         public static float[][] GenerateWhiteNoise(int width, int height)
         {
             float[][] noise = GetEmptyArray<float>(width, height);
@@ -151,14 +179,20 @@ namespace CustomPerlinNoise
             return image;
         }
 
+        /// <summary>
+        /// First half of the FBM algorithm
+        /// </summary>
+        /// <param name="baseNoise"></param>
+        /// <param name="octave"></param>
+        /// <returns></returns>
         public static float[][] GenerateSmoothNoise(float[][] baseNoise, int octave)
         {
             int width = baseNoise.Length;
             int height = baseNoise[0].Length;
 
             float[][] smoothNoise = GetEmptyArray<float>(width, height);
-            int lucanarity = 6;
 
+            int lucanarity = 6;
             int samplePeriod = 1 << octave; // calculates 2 ^ k
             samplePeriod *= lucanarity;
             float sampleFrequency = 1.0f / samplePeriod;
@@ -193,28 +227,36 @@ namespace CustomPerlinNoise
             return smoothNoise;
         }
 
-        public static float[][] GeneratePerlinNoise(float[][] baseNoise, TerrainAreaInfo fieldInfo)
+        /// <summary>
+        /// Function takes in base white noise and information about the terrain, and outputs FBM noise.
+        /// Refered to as "perlin" noise.
+        /// </summary>
+        /// <param name="baseNoise"></param>
+        /// <param name="terrainInfo"></param>
+        /// <returns></returns>
+        public static float[][] GeneratePerlinNoise(float[][] baseNoise, TerrainAreaInfo terrainInfo)
         {
             int width = baseNoise.Length;
             int height = baseNoise[0].Length;
 
-            float[][][] smoothNoise = new float[fieldInfo.octaveCount][][]; //an array of 2D arrays containing
+            float[][][] smoothNoise = new float[terrainInfo.octaveCount][][]; //an array of 2D arrays containing
 
-            float persistance = 0.5f;
 
             //generate smooth noise
-            for (int i = 0; i < fieldInfo.octaveCount; i++)
+            for (int i = 0; i < terrainInfo.octaveCount; i++)
             {
                 smoothNoise[i] = GenerateSmoothNoise(baseNoise, i);
             }
 
             float[][] perlinNoise = GetEmptyArray<float>(width, height); //an array of floats initialised to 0
 
+            float persistance = 0.5f;
             float amplitude = persistance;
             float totalAmplitude = 0.0f;
 
-            //blend noise together
-            for (int octave = fieldInfo.octaveCount - 1; octave >= 0; octave--)
+            //blend noise together over ocatves
+            // Second half of the FBM algorithm.
+            for (int octave = terrainInfo.octaveCount - 1; octave >= 0; octave--)
             {
                 amplitude *= persistance;
                 totalAmplitude += amplitude;
@@ -247,27 +289,12 @@ namespace CustomPerlinNoise
             return GeneratePerlinNoise(baseNoise, fieldsInfo);
         }
 
-        public static Color[][] MapToGrey(float[][] greyValues)
-        {
-            int width = greyValues.Length;
-            int height = greyValues[0].Length;
-
-            Color[][] image = GetEmptyArray<Color>(width, height);
-
-            for (int i = 0; i < width; i++)
-            {
-                for (int j = 0; j < height; j++)
-                {
-                    byte grey = (byte)(255 * greyValues[i][j]);
-                    Color32 color = new Color32(grey, grey, grey, 255);
-
-                    image[i][j] = color;
-                }
-            }
-
-            return image;
-        }
-
+        /// <summary>
+        /// Save a set of pixel colors as a 2D unity texture.
+        /// </summary>
+        /// <param name="image"></param>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
         public Texture2D SaveImage(Color32[][] image, string fileName)
         {
             int width = image.Length;
@@ -292,6 +319,15 @@ namespace CustomPerlinNoise
             return texture;
         }
 
+        /// <summary>
+        /// The "blending" alpha for two images. When in one area set a value to 0, when in another area set the value to 1, and anywhere in between set to a mixed value.
+        /// </summary>
+        /// <param name="image"></param>
+        /// <param name="low"></param>
+        /// <param name="high"></param>
+        /// <param name="textureWidth"></param>
+        /// <param name="textureHeight"></param>
+        /// <returns></returns>
         public static float[][] AdjustLevels(float[][] image, float low, float high, int textureWidth, int textureHeight)
         {
             float[][] newImage = GetEmptyArray<float>(textureWidth, textureHeight);
@@ -322,6 +358,16 @@ namespace CustomPerlinNoise
             return newImage;
         }
 
+        /// <summary>
+        /// Blend two images together based on input of noise.
+        /// Output a texture of the given texture width and height.
+        /// </summary>
+        /// <param name="image1"></param>
+        /// <param name="image2"></param>
+        /// <param name="perlinNoise"></param>
+        /// <param name="textureWidth"></param>
+        /// <param name="textureHeight"></param>
+        /// <returns></returns>
         public static Color32[][] BlendImages(Color32[][] image1, Color32[][] image2, float[][] perlinNoise, int textureWidth, int textureHeight)
         {
             int imageInterpolationFactorImageOne = Mathf.Max(1, textureWidth / image1.Length);
@@ -339,6 +385,11 @@ namespace CustomPerlinNoise
             return image;
         }
 
+        /// <summary>
+        /// Loads a 2D texture and outputs the raw pixel data for the texture.
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
         public static Color32[][] LoadImage(string fileName)
         {
             Texture2D texture = Resources.Load(fileName) as Texture2D;
